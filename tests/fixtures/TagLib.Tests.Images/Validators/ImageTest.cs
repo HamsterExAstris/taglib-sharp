@@ -1,4 +1,3 @@
-using Gdk;
 using System;
 using NUnit.Framework;
 
@@ -6,55 +5,64 @@ namespace TagLib.Tests.Images.Validators
 {
 	public class ImageTest
 	{
-		static ImageTest () {
+		static ImageTest()
+		{
 			// Initialize GDK
-			var args = Environment.GetCommandLineArgs ();
-			Global.InitCheck (ref args);
+			var args = Environment.GetCommandLineArgs();
 		}
 
 		string pre_hash;
 		string post_hash;
 
-		public static bool CompareLargeImages {
-			get {
-				return Environment.GetEnvironmentVariable ("COMPARE_LARGE_FILES") == "1";
+		public static bool CompareLargeImages
+		{
+			get
+			{
+				return Environment.GetEnvironmentVariable("COMPARE_LARGE_FILES") == "1";
 			}
 		}
 
-		public bool CompareImageData {
+		public bool CompareImageData
+		{
 			get; set;
 		}
 
-		public static void Run (string filename, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
+		public static void Run(string filename, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
 		{
-			Run (filename, true, invariant, modifications);
+			Run(filename, true, invariant, modifications);
 		}
 
-		public static void Run (string directory, string filename, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
+		public static void Run(string directory, string filename, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
 		{
-			Run (directory, filename, true, invariant, modifications);
+			Run(directory, filename, true, invariant, modifications);
 		}
 
-		public static void Run (string filename, bool compare_image_data, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
+		public static void Run(string filename, bool compare_image_data, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
 		{
-			Run ("samples", filename, compare_image_data, invariant, modifications);
+			Run("samples", filename, compare_image_data, invariant, modifications);
 		}
 
-		public static void Run (string directory, string filename, bool compare_image_data, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
+		public static void Run(string directory, string filename, bool compare_image_data, IMetadataInvariantValidator invariant, params IMetadataModificationValidator[] modifications)
 		{
-			if (modifications.Length == 0) {
-				ImageTest test = new ImageTest () {
-						ImageFileName = filename,
-						ImageDirectory = directory,
-						TempDirectory = directory,
-						CompareImageData = compare_image_data,
-						InvariantValidator = invariant,
-						ModificationValidator = null
-					};
-					test.TestImage ();
-			} else {
-				foreach (var modification in modifications) {
-					ImageTest test = new ImageTest () {
+			if (modifications.Length == 0)
+			{
+				ImageTest test = new ImageTest()
+				{
+					ImageFileName = filename,
+					ImageDirectory = directory,
+					TempDirectory = directory,
+					CompareImageData = compare_image_data,
+					InvariantValidator = invariant,
+					ModificationValidator = null
+				};
+				test.TestImage();
+			}
+			else
+			{
+				foreach (var modification in modifications)
+				{
+					ImageTest test = new ImageTest()
+					{
 						ImageFileName = filename,
 						ImageDirectory = directory,
 						TempDirectory = directory,
@@ -62,34 +70,34 @@ namespace TagLib.Tests.Images.Validators
 						InvariantValidator = invariant,
 						ModificationValidator = modification
 					};
-					test.TestImage ();
+					test.TestImage();
 				}
 			}
 		}
 
-		void TestImage ()
+		void TestImage()
 		{
-			var file = ParseUnmodifiedFile ();
+			var file = ParseUnmodifiedFile();
 
 			if (file.Writeable && ModificationValidator == null)
-				throw new Exception ("Wrong usage of test. A writeable file must be tested at least with a NoModificationValidator");
+				throw new Exception("Wrong usage of test. A writeable file must be tested at least with a NoModificationValidator");
 
 			if (ModificationValidator == null)
 				return;
 
-			ModifyFile ();
-			ParseModifiedFile ();
+			ModifyFile();
+			ParseModifiedFile();
 		}
 
 		/// <summary>
 		///    Parse the unmodified file.
 		/// </summary>
-		TagLib.Image.File ParseUnmodifiedFile ()
+		TagLib.Image.File ParseUnmodifiedFile()
 		{
-			var file = ReadFile (ImageFile);
-			InvariantValidator.ValidateMetadataInvariants (file);
+			var file = ReadFile(ImageFile);
+			InvariantValidator.ValidateMetadataInvariants(file);
 			if (CompareImageData)
-				pre_hash = ReadImageData (file);
+				pre_hash = ReadImageData(file);
 
 			return file;
 		}
@@ -97,36 +105,37 @@ namespace TagLib.Tests.Images.Validators
 		/// <summary>
 		///    Modify and save the file.
 		/// </summary>
-		void ModifyFile ()
+		void ModifyFile()
 		{
-			CreateTmpFile ();
-			var tmp = ReadFile (TempImageFile);
-			InvariantValidator.ValidateMetadataInvariants (tmp);
-			ModificationValidator.ValidatePreModification (tmp);
-			ModificationValidator.ModifyMetadata (tmp);
-			ModificationValidator.ValidatePostModification (tmp);
-			Assert.IsTrue (tmp.Writeable, "File should be writeable");
-			Assert.IsFalse (tmp.PossiblyCorrupt, "Corrupt files should never be written");
-			tmp.Save ();
+			CreateTmpFile();
+			var tmp = ReadFile(TempImageFile);
+			InvariantValidator.ValidateMetadataInvariants(tmp);
+			ModificationValidator.ValidatePreModification(tmp);
+			ModificationValidator.ModifyMetadata(tmp);
+			ModificationValidator.ValidatePostModification(tmp);
+			Assert.IsTrue(tmp.Writeable, "File should be writeable");
+			Assert.IsFalse(tmp.PossiblyCorrupt, "Corrupt files should never be written");
+			tmp.Save();
 		}
 
 		/// <summary>
 		///    Re-parse the modified file.
 		/// </summary>
-		void ParseModifiedFile ()
+		void ParseModifiedFile()
 		{
-			var tmp = ReadFile (TempImageFile);
-			InvariantValidator.ValidateMetadataInvariants (tmp);
-			ModificationValidator.ValidatePostModification (tmp);
-			if (CompareImageData) {
-				post_hash = ReadImageData (tmp);
-				ValidateImageData ();
+			var tmp = ReadFile(TempImageFile);
+			InvariantValidator.ValidateMetadataInvariants(tmp);
+			ModificationValidator.ValidatePostModification(tmp);
+			if (CompareImageData)
+			{
+				post_hash = ReadImageData(tmp);
+				ValidateImageData();
 			}
 		}
 
-		Image.File ReadFile (string path)
+		Image.File ReadFile(string path)
 		{
-			return File.Create (path) as Image.File;
+			return File.Create(path) as Image.File;
 		}
 
 		/// <summary>
@@ -134,63 +143,68 @@ namespace TagLib.Tests.Images.Validators
 		///    this just means adding the type here. RAW files need extra
 		///    attention.
 		/// </summary>
-		bool IsSupportedImageFile (Image.File file)
+		bool IsSupportedImageFile(Image.File file)
 		{
 			return (file is Jpeg.File) || (file is Tiff.File) || (file is Gif.File) || (file is Png.File);
 		}
 
-		string ReadImageData (Image.File file)
+		string ReadImageData(Image.File file)
 		{
-			if (!IsSupportedImageFile (file))
-				Assert.Fail("Unsupported type for data reading: "+file);
+			if (!IsSupportedImageFile(file))
+				Assert.Fail("Unsupported type for data reading: " + file);
 
 			file.Mode = File.AccessMode.Read;
-			ByteVector v = file.ReadBlock ((int) file.Length);
-			byte [] result = null;
-			using (Pixbuf buf = new Pixbuf(v.Data))
-				result = buf.SaveToBuffer("png");
+			ByteVector v = file.ReadBlock((int)file.Length);
+			byte[] result = null;
+			Assert.Fail("PixBuf/GTK# not supported!");
 			file.Mode = File.AccessMode.Closed;
-			return Utils.Md5Encode (result);
+			return Utils.Md5Encode(result);
 		}
 
-		void ValidateImageData ()
+		void ValidateImageData()
 		{
-			string label = String.Format ("Image data mismatch for {0}/{1}", ImageFileName, ModificationValidator);
-			Assert.AreEqual (pre_hash, post_hash, label);
+			string label = String.Format("Image data mismatch for {0}/{1}", ImageFileName, ModificationValidator);
+			Assert.AreEqual(pre_hash, post_hash, label);
 		}
 
-		void CreateTmpFile ()
+		void CreateTmpFile()
 		{
-			if (System.IO.File.Exists (TempImageFile))
-				System.IO.File.Delete (TempImageFile);
-			System.IO.File.Copy (ImageFile, TempImageFile);
+			if (System.IO.File.Exists(TempImageFile))
+				System.IO.File.Delete(TempImageFile);
+			System.IO.File.Copy(ImageFile, TempImageFile);
 		}
 
 		/// <summary>
 		///    The filename of the file to test. Name only, no paths.
 		/// </summary>
-		string ImageFileName {
+		string ImageFileName
+		{
 			get; set;
 		}
 
-		string TempImageFileName {
-			get { return String.Format ("tmpwrite_{0}", ImageFileName); }
+		string TempImageFileName
+		{
+			get { return String.Format("tmpwrite_{0}", ImageFileName); }
 		}
 
-		string ImageDirectory {
+		string ImageDirectory
+		{
 			get; set;
 		}
 
-		string TempDirectory {
+		string TempDirectory
+		{
 			get; set;
 		}
 
-		string ImageFile {
-			get { return String.Format ("{0}/{1}", ImageDirectory, ImageFileName); }
+		string ImageFile
+		{
+			get { return String.Format("{0}/{1}", ImageDirectory, ImageFileName); }
 		}
 
-		string TempImageFile {
-			get { return String.Format ("{0}/{1}", TempDirectory, TempImageFileName); }
+		string TempImageFile
+		{
+			get { return String.Format("{0}/{1}", TempDirectory, TempImageFileName); }
 		}
 
 		/// <summary>
@@ -198,7 +212,8 @@ namespace TagLib.Tests.Images.Validators
 		///    never changed during the course of testing and should
 		///    stay the same, even during writing.
 		/// </summary>
-		public IMetadataInvariantValidator InvariantValidator {
+		public IMetadataInvariantValidator InvariantValidator
+		{
 			get; set;
 		}
 
@@ -208,7 +223,8 @@ namespace TagLib.Tests.Images.Validators
 		///    to write a file unmodified and see if it's still the same.
 		///    Setting this to null disables write testing.
 		/// </summary>
-		public IMetadataModificationValidator ModificationValidator {
+		public IMetadataModificationValidator ModificationValidator
+		{
 			get; set;
 		}
 	}
